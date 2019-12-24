@@ -1,8 +1,8 @@
 apply plugin: 'com.android.application'
-
-
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply from: '../signing/keystorePassword.gradle'
+apply plugin: DatePlugin
 
 android {
     compileSdkVersion rootProject.compileSdkVersion
@@ -14,7 +14,75 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
+    signingConfigs {
+        release {
+            storeFile file(config.storeFile)
+            storePassword config.storePassword
+            keyAlias config.keyAlias
+            keyPassword config.keyPassword
+        }
+    }
+    flavorDimensions "appMode"
+
+    productFlavors {
+
+        free {
+            dimension "appMode"
+
+            applicationIdSuffix ".free"
+
+            manifestPlaceholders = [appName: "@string/app_name_free"]
+        }
+
+        paid {
+            dimension "appMode"
+
+            applicationIdSuffix = ".paid"
+
+            manifestPlaceholders = [appName: "@string/app_name_paid"]
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+        }
+        debug {}
+    }
 }
+
+    task addCurrentDate() {
+        android.applicationVariants.all {
+            variant ->
+                variant.outputs.all { output ->
+                    def date = new Date().format("dd-MM-yyyy")
+
+                    def fileName = variant.name + "_" + date + ".apk"
+
+                    output.outputFileName = fileName
+                }
+        }
+    }
+
+    class DatePlugin implements Plugin<Project> {
+        void apply(Project project) {
+            project.task('addCurrentDatePluginTask') {
+                project.android.applicationVariants.all { variant ->
+                    variant.outputs.all { output ->
+                        def date = new Date().format("dd-MM-yyyy")
+                        def fileName = variant.name + "_" + date + ".apk"
+                        output.outputFileName = fileName
+                    }
+                }
+            }
+        }
+    }
+
+    gradle.taskGraph.whenReady {
+        addCurrentDatePluginTask
+    }
+
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')

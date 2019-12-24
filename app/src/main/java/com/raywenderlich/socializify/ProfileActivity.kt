@@ -32,12 +32,39 @@ package com.raywenderlich.socializify
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.view.View
+import android.widget.Toast
+import com.squareup.picasso.Picasso
+import kotlinx.android.synthetic.main.activity_profile.*
 
 class ProfileActivity : AppCompatActivity() {
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_profile)
-  }
+    companion object {
+        const val PAID_FLAVOR = "paid"
+    }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_profile)
+        loadAvatar()
+        showMessage()
+        togglePhotoVisibility()
+
+    }
+
+    private fun isAppPaid() = BuildConfig.FLAVOR == PAID_FLAVOR
+
+    private fun loadAvatar() {
+        Picasso.with(this).load("https://goo.gl/tWQB1a").into(avatar)
+    }
+
+    private fun showMessage() {
+        val message = if (isAppPaid()) R.string.paid_app_message else R.string.free_app_message
+        Toast.makeText(this, getString(message), Toast.LENGTH_LONG).show()
+    }
+
+    private fun togglePhotoVisibility() {
+        extraPhotos.visibility = if (isAppPaid()) View.VISIBLE else View.GONE
+        restriction.visibility = if (isAppPaid()) View.GONE else View.VISIBLE
+    }
 }
